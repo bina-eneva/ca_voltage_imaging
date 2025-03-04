@@ -54,70 +54,77 @@ def update_ome_metadata(metadata, new_size_t):
     return updated_metadata
 
 def combine_ome_tiffs(input_folder, output_folder):
-    """
-    Combines multiple OME-TIFF files into a single OME-TIFF while preserving metadata.
-
-    Parameters:
-    - input_files: List of OME-TIFF file paths to be combined.
-    - output_file: Path for the combined OME-TIFF output.
-    """
+  
     tif_files = [f for f in sorted(os.listdir(input_folder)) if f.endswith('.tif')]
     
-    output_filename=tif_files[0].replace('.ome.tif', '_combined.ome.tif')
+    output_filename=tif_files[0].replace('.ome.tif', '_combined.tif')
     output_path=os.path.join(output_folder, output_filename)
     
     combined_frames = []  # List to store image frames
-    metadata = None  # Variable to store OME metadata
-    total_frames = 0  # Counter for total number of frames
+    # metadata = None  # Variable to store OME metadata
+    # total_frames = 0  # Counter for total number of frames
 
     # Step 1: Read images and extract metadata
     for file in tif_files:
         with tiff.TiffFile(os.path.join(input_folder, file)) as tif:
-            images = tif.asarray()  # Read all frames as NumPy array
-            combined_frames.append(images)  # Store frames
-            total_frames += images.shape[0]  # Count frames
+            # images = tif.asarray()  # Read all frames as NumPy array
+            # combined_frames.append(images)  # Store frames
+            for page in tif.pages: 
+                combined_frames.append(page.asarray())  # Store each frame
+            
+            # print(f"Reading {file}, shape: {images.shape}")
+            # total_frames += images.shape[0]  # Count frames
 
             # Extract metadata from the first file
-            if metadata is None:
-                metadata = tif.ome_metadata
+            # if metadata is None:
+            #     metadata = tif.ome_metadata
 
     # Step 2: Stack images along the correct axis (Z or T)
-    combined_stack = np.concatenate(combined_frames, axis=0)  # Adjust axis as needed
+    # combined_stack = np.concatenate(combined_frames, axis=0)  # Adjust axis as needed
+    combined_stack = np.stack(combined_frames, axis=0) 
 
     # Step 3: Update metadata with new frame count
-    updated_metadata = update_ome_metadata(metadata, total_frames)
-    updated_metadata=tiff.xml2dict(updated_metadata)
+    # updated_metadata = update_ome_metadata(metadata, total_frames)
+    # updated_metadata=tiff.xml2dict(updated_metadata)
 
     # Step 4: Save combined image stack as an OME-TIFF
     with tiff.TiffWriter(output_path, bigtiff=True) as writer: 
-        writer.write(combined_stack)
+         writer.write(combined_stack)
+    
+    print(f"Combined stack shape: {combined_stack.shape}")
+    print(f"Combined file saved as: {output_filename}")
+    
 
-    print(f"Combined OME-TIFF saved as: {output_filename}")
 
-
-def deinterleave_tif(input_folder,filename, output_folder):
-    input_file = os.path.join(input_folder, filename)
+def deinterleave_tif(input_file):
+    
     with tiff.TiffFile(input_file) as tif:
         # Create output files
-        output_file1 = filename.replace('.ome.tif', '_voltage.ome.tif')
-        output_file2 = filename.replace('.ome.tif', '_ca.ome.tif')
+        output_file1 = input_file.replace('.tif', '_voltage.tif')
+        output_file2 = input_file.replace('.tif', '_ca.tif')
         
-        output_path1=os.path.join(output_folder, output_file1)
-        output_path2=os.path.join(output_folder, output_file2)
+        voltage=[];
+        calcium=[];
+       
+        for i, page in enumerate(tif.pages):  # Process pages inside the open block
+            img = page.asarray()  # Read frame while file is open
+            if i % 2 == 0:
+                    voltage.append(img)
+                    # tif1.write(img)
+            else:
+                    calcium.append(img)
+                    # tif2.write(img)
+        voltage=np.stack(voltage, axis=0)
+        calcium=np.stack(calcium, axis=0) 
+        
+    with tiff.TiffWriter(output_file1, bigtiff=True) as tif1, tiff.TiffWriter(output_file2, bigtiff=True) as tif2:
+          tif1.write(voltage)
+          tif2.write(calcium)
 
-        with tiff.TiffWriter(output_path1) as tif1, tiff.TiffWriter(output_path2) as tif2:
-            for i, page in enumerate(tif.pages):  # Process pages inside the open block
-                img = page.asarray()  # Read frame while file is open
-                if i % 2 == 0:
-                    tif1.write(img)
-                else:
-                    tif2.write(img)
+    print(f"Processed: {os.path.basename(input_file)} → {os.path.basename(output_file1)} and {os.path.basename(output_file2)}")
 
-    print(f"Processed: {input_file} → {output_file1}, {output_file2}")
-
-#specify folders
-# root_directory = "R:/projects/thefarm2/live/Firefly/Calcium_Voltage_Imaging/MDA_MB_468/20250127/slip1" 
-root_directory = r"R:\projects\thefarm2\live\Firefly\Calcium_Voltage_Imaging\MDA_MB_468\20250227\slip3\area1\20250227_slip3_area1_cytochalasin_1uM_60min_1"
+# specify folders
+root_directory = "R:/projects/thefarm2/live/Firefly/Calcium_Voltage_Imaging/MDA_MB_468/20250127" 
 output_folder=r"D:/Ca_Voltage_Imaging_working/20250127"
 os.makedirs(output_folder, exist_ok=True)
 
@@ -125,13 +132,13 @@ last_level_folders = get_last_level_folders(root_directory)
 folders = [ s for s in last_level_folders if not (s.startswith('20250208') or s.startswith('20250209') or s.endswith('after') or s.endswith('before') or s.endswith('brightfield'))]
 
 
-# for folder in folders:
+# for folder in folders: 
 #     print(f"Working on folder {folder}")
 #     combine_ome_tiffs(folder,output_folder) 
     
-for folder in folders:
-    for filename in os.listdir(folder):
-         if filename.lower().endswith('default.ome.tif'):  # Only process .tif files
-            deinterleave_tif(folder, filename,output_folder)
+for filename in os.listdir(output_folder): 
+    if filename.lower().endswith('combined.tif'):  # Only process .tif files
+        input_file = os.path.join(output_folder, filename)
+        deinterleave_tif(input_file)
 
  
