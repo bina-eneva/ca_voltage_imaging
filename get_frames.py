@@ -64,32 +64,22 @@ def combine_ome_tiffs(input_folder, output_folder):
     # metadata = None  # Variable to store OME metadata
     # total_frames = 0  # Counter for total number of frames
 
-    # Step 1: Read images and extract metadata
     for file in tif_files:
         with tiff.TiffFile(os.path.join(input_folder, file)) as tif:
-            # images = tif.asarray()  # Read all frames as NumPy array
-            # combined_frames.append(images)  # Store frames
             for page in tif.pages: 
                 combined_frames.append(page.asarray())  # Store each frame
             
-            # print(f"Reading {file}, shape: {images.shape}")
-            # total_frames += images.shape[0]  # Count frames
-
             # Extract metadata from the first file
             # if metadata is None:
             #     metadata = tif.ome_metadata
 
-    # Step 2: Stack images along the correct axis (Z or T)
-    # combined_stack = np.concatenate(combined_frames, axis=0)  # Adjust axis as needed
     combined_stack = np.stack(combined_frames, axis=0) 
-
-    # Step 3: Update metadata with new frame count
+    # total_frames = combined_frames.shape[0]  # Count frames
     # updated_metadata = update_ome_metadata(metadata, total_frames)
     # updated_metadata=tiff.xml2dict(updated_metadata)
 
-    # Step 4: Save combined image stack as an OME-TIFF
     with tiff.TiffWriter(output_path, bigtiff=True) as writer: 
-         writer.write(combined_stack)
+         writer.write(combined_stack) # Add metadata=updated_metadata if you need it
     
     print(f"Combined stack shape: {combined_stack.shape}")
     print(f"Combined file saved as: {output_filename}")
@@ -107,13 +97,13 @@ def deinterleave_tif(input_file):
         calcium=[];
        
         for i, page in enumerate(tif.pages):  # Process pages inside the open block
-            img = page.asarray()  # Read frame while file is open
+            img = page.asarray()  
             if i % 2 == 0:
                     voltage.append(img)
-                    # tif1.write(img)
+                
             else:
                     calcium.append(img)
-                    # tif2.write(img)
+                   
         voltage=np.stack(voltage, axis=0)
         calcium=np.stack(calcium, axis=0) 
         
