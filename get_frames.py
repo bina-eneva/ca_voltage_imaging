@@ -122,9 +122,9 @@ last_level_folders = get_last_level_folders(root_directory)
 folders = [ s for s in last_level_folders if not (s.startswith('20250208') or s.startswith('20250209') or s.endswith('after') or s.endswith('before') or s.endswith('brightfield'))]
 
 
-# for folder in folders: 
-#     print(f"Working on folder {folder}")
-#     combine_ome_tiffs(folder,output_folder) 
+for folder in folders: 
+    print(f"Working on folder {folder}")
+    combine_ome_tiffs(folder,output_folder) 
     
 for filename in os.listdir(output_folder): 
     if filename.lower().endswith('combined.tif'):  # Only process .tif files
