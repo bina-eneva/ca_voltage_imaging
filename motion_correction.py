@@ -9,6 +9,7 @@ import numpy as np
 import tifffile as tiff
 from cellpose import models
 from cellpose.io import imread
+import matplotlib.pyplot as plt
 image_stack=r"D:/Ca_Voltage_Imaging_working/20250127/20250127_slip5_area1_exp3ms_1_MMStack_Default_combined_voltage.tif"
 
 def get_every_100th_image(image_stack):
@@ -38,6 +39,7 @@ def get_every_100th_image(image_stack):
     print(f"Returning {frames_to_align.shape[0]} frames to align")
     
     return frames_to_align
+
  
 frames= get_every_100th_image(image_stack)
 
@@ -50,3 +52,10 @@ imgs = imread(r"D:/Ca_Voltage_Imaging_working/20250127/frames_to_align.tif")
 masks, flows, styles, diams = model.eval(imgs, diameter=30, channels=[0,0],
                                          flow_threshold=0.4, cellprob_threshold=0.5, do_3D=False)
 
+masks_binary=(masks > 0).astype(np.uint8)
+
+
+# plt.imshow(masks_binary[25], cmap='gray')  # Use 'gray' colormap for binary masks
+# plt.title("First Mask")
+# plt.axis('off')  # Turn off axis for better visualization
+# plt.show()

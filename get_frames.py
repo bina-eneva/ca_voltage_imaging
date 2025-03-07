@@ -114,8 +114,8 @@ def deinterleave_tif(input_file):
     print(f"Processed: {os.path.basename(input_file)} → {os.path.basename(output_file1)} and {os.path.basename(output_file2)}")
 
 # specify folders
-root_directory = "R:/projects/thefarm2/live/Firefly/Calcium_Voltage_Imaging/MDA_MB_468/20250127" 
-output_folder=r"D:/Ca_Voltage_Imaging_working/20250127"
+root_directory = "R:/projects/thefarm2/live/Firefly/Calcium_Voltage_Imaging/MDA_MB_468/20250304/slip4" 
+output_folder=r"R:\projects\thefarm2\live\Firefly\ca_voltage_imaging_working\20250304"
 os.makedirs(output_folder, exist_ok=True)
 
 last_level_folders = get_last_level_folders(root_directory)
