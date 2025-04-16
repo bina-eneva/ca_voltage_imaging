@@ -8,7 +8,7 @@ Created on Tue Feb 25 12:27:30 2025
 import os
 import numpy as np
 import tifffile as tiff
-import xml.etree.ElementTree as ET
+# import xml.etree.ElementTree as ET
 
 def get_last_level_folders(root_dir):
     last_level_folders = set()
@@ -114,21 +114,31 @@ def deinterleave_tif(input_file):
     print(f"Processed: {os.path.basename(input_file)} → {os.path.basename(output_file1)} and {os.path.basename(output_file2)}")
 
 # specify folders
-root_directory = "R:/projects/thefarm2/live/Firefly/Calcium_Voltage_Imaging/MDA_MB_468/20250127" 
-output_folder=r"D:/Ca_Voltage_Imaging_working/20250127"
-os.makedirs(output_folder, exist_ok=True)
+# root_directory = "R:/projects/thefarm2/live/Firefly/Calcium_Voltage_Imaging/MDA_MB_468/20250127" 
+# output_folder=r"D:/Ca_Voltage_Imaging_working/20250127"
+# os.makedirs(output_folder, exist_ok=True)
 
-last_level_folders = get_last_level_folders(root_directory)
-folders = [ s for s in last_level_folders if not (s.startswith('20250208') or s.startswith('20250209') or s.endswith('after') or s.endswith('before') or s.endswith('brightfield'))]
-
-
-for folder in folders: 
-    print(f"Working on folder {folder}")
-    combine_ome_tiffs(folder,output_folder) 
+current_directory = os.getcwd()
+# big_folder = ['20250225', '20250226', '20250227', '20250302', '20250304', '20250305', '20250308']
+big_folder = ['20250302']
     
-for filename in os.listdir(output_folder): 
-    if filename.lower().endswith('combined.tif'):  # Only process .tif files
-        input_file = os.path.join(output_folder, filename)
-        deinterleave_tif(input_file)
+for i in big_folder:
+    output = f"{i}_processed"
+    root_directory = os.path.join(current_directory, i)
+    output_folder=os.path.join(current_directory, output)
+    os.makedirs(output_folder, exist_ok=True)
+    
+    last_level_folders = get_last_level_folders(root_directory)
+    folders = [ s for s in last_level_folders if not (s.startswith('20250208') or s.startswith('20250209') or s.endswith('after') or s.endswith('before') or s.endswith('brightfield') or s.endswith('post'))]
+    
+    
+    for folder in folders: 
+        print(f"Working on folder {folder}")
+        combine_ome_tiffs(folder,output_folder) 
+        
+    for filename in os.listdir(output_folder): 
+        if filename.lower().endswith('combined.tif'):  # Only process .tif files
+            input_file = os.path.join(output_folder, filename)
+            deinterleave_tif(input_file)
 
  
