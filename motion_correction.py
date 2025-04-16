@@ -12,6 +12,7 @@ from cellpose.io import imread
 import matplotlib.pyplot as plt
 import SimpleITK as sitk
 
+
 #%% Get frames to align
 # image_stack=r"R:\projects\thefarm2\live\Firefly\ca_voltage_imaging_working\20250127\20250127_slip4_area1_exp3ms_4AP_5mM_washout_1_MMStack_Default_combined_voltage.tif"
 
@@ -171,3 +172,10 @@ axes.axis('off')
 plt.tight_layout()
 
 
+masks_binary=(masks > 0).astype(np.uint8)
+
+
+# plt.imshow(masks_binary[25], cmap='gray')  # Use 'gray' colormap for binary masks
+# plt.title("First Mask")
+# plt.axis('off')  # Turn off axis for better visualization
+# plt.show()
